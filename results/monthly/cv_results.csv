@@ -1,0 +1,9 @@
+,fname,smape
+0,Corp_CHAPS_Inbound.csv,0.05
+0,Corp_CHAPS_Outbound.csv,0.73
+0,Corp_International_Inbound.csv,0.69
+0,Corp_International_Outbound.csv,0.74
+0,Retail_CHAPS_Inbound.csv,0.09
+0,Retail_CHAPS_Outbound.csv,0.16
+0,Retail_International_Inbound.csv,0.73
+0,Retail_International_Outbound.csv,0.75
