@@ -20,10 +20,16 @@ bankholidaylist = ['2017-01-02', '2017-04-14','2017-04-17','2017-05-01', '2017-0
   
 def produce_flags(df):
   df['holiday'] = df['ds'].apply(lambda x: 1 if str(x)[:10] in bankholidaylist else 0)
-  df['friday'] = df['ds'].apply(lambda x: 1 if datetime.datetime.strptime(str(x)[:10], "%Y-%m-%d").weekday() == 4 else 0)
+
   df['monday'] = df['ds'].apply(lambda x: 1 if datetime.datetime.strptime(str(x)[:10], "%Y-%m-%d").weekday() == 0 else 0)
-  df['first3_weekday'] = df['ds'].apply(lambda x: 1 if datetime.datetime.strptime(str(x)[:10], "%Y-%m-%d").weekday() in [0,1,2] else 0)
+  df['tuesday'] = df['ds'].apply(lambda x: 1 if datetime.datetime.strptime(str(x)[:10], "%Y-%m-%d").weekday() == 1 else 0)
+  df['wednesday'] = df['ds'].apply(lambda x: 1 if datetime.datetime.strptime(str(x)[:10], "%Y-%m-%d").weekday() == 2 else 0)
+  df['thursday'] = df['ds'].apply(lambda x: 1 if datetime.datetime.strptime(str(x)[:10], "%Y-%m-%d").weekday() == 3 else 0)
+  df['friday'] = df['ds'].apply(lambda x: 1 if datetime.datetime.strptime(str(x)[:10], "%Y-%m-%d").weekday() == 4 else 0)
   df['weekend'] = df['ds'].apply(lambda x: 1 if datetime.datetime.strptime(str(x)[:10], "%Y-%m-%d").weekday() > 4 else 0)
+
+  df['first3_weekday'] = df['ds'].apply(lambda x: 1 if datetime.datetime.strptime(str(x)[:10], "%Y-%m-%d").weekday() in [0,1,2] else 0)
+
   bm_start = pd.date_range(df['ds'].min(), df['ds'].max(), freq='BMS')
   bm_end = pd.date_range(df['ds'].min(), df['ds'].max(),freq='BM')
   df['business_start'] = df['ds'].apply(lambda x: (x in bm_start))
@@ -46,7 +52,6 @@ def produce_flags(df):
   
   df['business_end_lf'] = df['ds'].apply(lambda x: (x in bm_end_lf))
   df['business_end_lf'] = df['business_end_lf'].astype(int)
-  
   df['business_end_lf_lag'] = df['ds'].apply(lambda x: (x in bm_end_lf_lag))
   df['business_end_lf_lag'] = df['business_end_lf_lag'].astype(int)
   

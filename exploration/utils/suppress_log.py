@@ -1,6 +1,10 @@
 import os
 import sys
 
+###################################################################################################
+# Not my code - for quality of life                                                               #
+# https://stackoverflow.com/questions/11130156/suppress-stdout-stderr-print-from-python-functions #
+###################################################################################################
 class suppress_stdout_stderr(object):
     '''
     A context manager for doing a "deep suppression" of stdout and stderr in

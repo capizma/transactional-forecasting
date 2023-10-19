@@ -1,2 +1,0 @@
-,params,smape
-0,"{'changepoint_prior_scale': 0.005, 'seasonality_prior_scale': 0.05, 'holidays_prior_scale': 0.05, 'yearly_seasonality': True}",0.35818148301572283

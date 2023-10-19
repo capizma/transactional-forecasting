@@ -1,20 +1,19 @@
 ,fname,smape
 0,Cheque_Image_Inbound_Corporate.csv,0.11
 0,Cheque_Image_Inbound_Retail.csv,0.06
-0,Cheque_Image_Outbound_Corporate.csv,0.21
+0,Cheque_Image_Outbound_Corporate.csv,0.22
 0,Cheque_Image_Outbound_Retail.csv,0.1
 0,Corporate Debit Card ATM Us On Them.csv,0.1
-0,Corporate Debit Card ATM Us On Us.csv,0.41
+0,Corporate Debit Card ATM Us On Us.csv,0.4
 0,Corporate_BACS_Direct_Credit.csv,0.1
 0,Corporate_BACS_Direct_Debit.csv,0.17
 0,Faster_Payment_Inbound_Corp.csv,0.54
 0,Faster_Payment_Inbound_Retail.csv,0.1
-0,Faster_Payment_Outbound_Corporate.csv,0.24
 0,Faster_Payment_Outbound_Retail.csv,0.1
 0,Retail Credit Card ATM Us On Them.csv,0.16
 0,Retail Credit Card ATM Us On Us.csv,0.19
 0,Retail Debit Card ATM Us On Them.csv,0.09
 0,Retail Debit Card ATM Us On Us.csv,0.08
-0,Retail_BACS_Direct_Credit.csv,0.23
+0,Retail_BACS_Direct_Credit.csv,0.22
 0,Retail_BACS_Direct_Debit.csv,0.25
 0,Universal_Credit_Payments.csv,0.1

@@ -1,6 +1,7 @@
-from exploration.utils import regressors, dataframe_utils, cutoff_utils
-import forecasting
+from exploration.utils import regressors, dataframe_utils, cutoff_utils,json_utils
+from exploration.utils import forecasting
 
+import json
 import pandas as pd
 import numpy as np
 import datetime
@@ -12,6 +13,7 @@ from prophet import Prophet
 from prophet.diagnostics import cross_validation, performance_metrics
 import tqdm
 import logging
+from permetrics.regression import RegressionMetric
 pd.options.mode.chained_assignment = None 
 
 logging.getLogger("cmdstanpy").disabled = True 
@@ -46,7 +48,6 @@ def plotthing(df):
     
     ticks = produce_ticks(df)
     plt.xticks(ticks[0],ticks[1])
-    #ax.xaxis.set_major_locator(plt.MaxNLocator(4))
     
     plt.savefig('./results/fit_images/'+fname.replace('.csv','.png'))
     
@@ -55,8 +56,12 @@ def plotthing(df):
 if __name__ == '__main__':
     ls = []
     
-    for fname in os.listdir('./params/hyperparams/'):
-        data = pd.read_csv('./params/hyperparams/'+fname)
+    with open('./params/params.json','r') as f:
+        p = json.loads(f.read())
+    
+    for fname in p.keys():
+        data = pd.DataFrame([pd.Series(p[fname])])
+        data = data[['secondary_smape']]
         data['fname'] = fname
         
         ls.append(data)
@@ -64,19 +69,29 @@ if __name__ == '__main__':
     smapes_ls = []
         
     data = pd.concat(ls).reset_index()
-    data = data[['fname','smape']]
-    data = data.sort_values(by='smape',ascending=False).reset_index()[['fname','smape']]
+    data = data[['fname','secondary_smape']]
+    data = data.sort_values(by='secondary_smape',ascending=False).reset_index()[['fname','secondary_smape']]
     
-    for fname in tqdm.tqdm(os.listdir('./params/hyperparams/')):
+    for fname in tqdm.tqdm(os.listdir('./data/')):
+        
+        # If there aren't any parameters then abandon the iteration
+        if json_utils.read_params(fname, ['hyperfit']) == 0 or json_utils.read_params(fname, ['hyperparams']) == 0:
+            print(fname + " doesn't have a full parameter list. Skipping...")
+            continue
         
         df = dataframe_utils.ingest_dataframe(fname)
         
-        regr = eval(pd.read_csv('./params/hyperfits/'+fname)['regressor'].values[0])
-        params = eval(pd.read_csv('./params/hyperparams/'+fname)['params'].values[0])
+        regr = json_utils.read_params(fname, ['hyperfit'])
+        params = json_utils.read_params(fname, ['hyperparams'])
             
         cutoffs = cutoff_utils.produce_single_cutoff(df)
         
         results = forecasting.produce_cv(df,params=None,regr=regr,cutoffs=cutoffs[0],horizon=cutoffs[1])
+        
+        temp = results[1]
+        temp['err'] = abs(temp['y']-temp['yhat'])
+        temp = temp.sort_values(by='err')
+        #temp.to_csv(fname)
         
         smapes_ls.append(pd.DataFrame([[fname,str(round(results[0],2))]],columns=['fname','smape']))
         
@@ -96,4 +111,4 @@ if __name__ == '__main__':
     
     print("\nAll 3-month range error metrics exported to ./results/cv_results.csv")   
     print("Results with sMAPE above 15% threshold (these are worth being inspected within /results/fit_images):")
-    print(data[data['smape'] > 0.15])
+    print(data[data['secondary_smape'] > 0.15])

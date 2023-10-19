@@ -1,5 +1,5 @@
-import forecasting
-from exploration.utils import dataframe_utils, regressors, cutoff_utils
+from exploration.utils import forecasting
+from exploration.utils import dataframe_utils, regressors, cutoff_utils, json_utils
 
 import os
 from prophet import Prophet
@@ -25,23 +25,27 @@ sns.set(style="darkgrid")
 warnings.simplefilter(action='ignore')
 
 logging.getLogger("fbprophet").setLevel(logging.ERROR)
-logging.getLogger("cmdstanpy").setLevel(logging.ERROR)
+
+logger = logging.getLogger('cmdstanpy')
+logger.addHandler(logging.NullHandler())
+logger.propagate = False
+logger.setLevel(logging.CRITICAL)
 
 if __name__ == '__main__':
 
     problematic_fits = []
-    
-    param_grid = {
-        'changepoint_prior_scale':[0.005,0.05,0.1],
-        'seasonality_prior_scale':[0.05,0.5,10.0],
-        'holidays_prior_scale':[0.05,0.5,10.0],
-        'yearly_seasonality':[True,False],
-    }
 
-    for fname in os.listdir('./params/hyperfits/'):
+    for fname in os.listdir('./data/'):
+        
+        # If there aren't any regressors then abandon the iteration
+        if json_utils.read_params(fname, ['hyperfit']) == 0:
+            print(fname + " doesn't have any identified regressors. Skipping...")
+            continue
+        
+        param_grid = json_utils.read_file_config(fname)[0]
     
         # Skip if file already output / dataset too small
-        if fname in os.listdir('./params/hyperparams/'):
+        if json_utils.read_params(fname, ['hyperparams']) != 0:
             continue
     
         df = dataframe_utils.ingest_dataframe(fname)
@@ -51,11 +55,10 @@ if __name__ == '__main__':
         smapes = []
         
         cutoffs = cutoff_utils.produce_general_cutoffs(df)      
-        regr_df = pd.read_csv("./params/hyperfits/"+fname)
-        selected_regr = eval(regr_df['regressor'].values[0])
+        selected_regr = json_utils.read_params(fname,"hyperfit")
     
         best_params = None
-        best_smape = 0
+        best_smape = 1
         
         for param_set in tqdm.tqdm(all_params):
             try:
@@ -71,18 +74,16 @@ if __name__ == '__main__':
             # We have a problematic fit
             continue
             
-        if np.min(smapes) > best_smape:
+        if np.min(smapes) < best_smape:
             best_params = all_params[np.argmin(smapes)]
             best_smape = np.min(smapes)
                 
         if best_params == None:
             problematic_fits.append(fname)
         
-        export = pd.DataFrame([[best_params,best_smape]],columns=['params','smape'])
-        export.to_csv('./params/hyperfits/'+fname)  
-        problematic_fits.append(fname)
+        json_utils.append_data(fname,"hyperparams",best_params)
+        json_utils.append_data(fname,"secondary_smape",best_smape)
         
-        print('\nAll regressors exported to ./params/hyperparams/')
         if len(problematic_fits) > 0:
             print("WARNING - Some data could not be fit appropriately.")
             print("Please inspect the data quality for the following files:")

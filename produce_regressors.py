@@ -1,5 +1,5 @@
-import forecasting
-from exploration.utils import dataframe_utils, regressors, cutoff_utils
+from exploration.utils import forecasting
+from exploration.utils import dataframe_utils, regressors, cutoff_utils, json_utils
 
 import os
 from prophet import Prophet
@@ -25,7 +25,11 @@ sns.set(style="darkgrid")
 warnings.simplefilter(action='ignore')
 
 logging.getLogger("fbprophet").setLevel(logging.ERROR)
-logging.getLogger("cmdstanpy").setLevel(logging.ERROR)
+
+logger = logging.getLogger('cmdstanpy')
+logger.addHandler(logging.NullHandler())
+logger.propagate = False
+logger.setLevel(logging.CRITICAL)
 
 def regressor_grid(regressor_ls):
     # Build further regression options
@@ -50,25 +54,22 @@ if __name__ == '__main__':
 
     problematic_fits = []
     
-    regressor_groups = [
-        ['business_end_lf_lag','business_end_lag','business_end','business_end_lf'],
-        ['business_start','business_end','holiday']  
-    ]
-
     for fname in os.listdir('./data/'):
+        
+        regressor_groups = json_utils.read_file_config(fname)[1]
     
         # Skip if file already output / dataset too small
-        if fname in os.listdir('./params/hyperfits/'):
+        if json_utils.read_params(fname, ['hyperfit']) != 0:
             continue
     
         df = dataframe_utils.ingest_dataframe(fname)
         
         if len(df) < 100:
-            print(fname + " has been identified as monthly. Skipping...")
+            print(fname + " has too few rows. Skipping...")
             continue
         
         best_params = None
-        best_smape = 0
+        best_smape = 1
         
         for group in regressor_groups:
             
@@ -90,18 +91,16 @@ if __name__ == '__main__':
                 # We have a problematic fit
                 continue
                 
-            if np.min(smapes) > best_smape:
+            if np.min(smapes) < best_smape:
                 best_params = grid[np.argmin(smapes)]
                 best_smape = np.min(smapes)
                 
         if best_params == None:
             problematic_fits.append(fname)
         
-        export = pd.DataFrame([[best_params,best_smape]],columns=['regressor','smape'])
-        export.to_csv('./params/hyperfits/'+fname)  
-        problematic_fits.append(fname)
+        json_utils.append_data(fname,"hyperfit",best_params)
+        json_utils.append_data(fname,"initial_smape",best_smape)
         
-        print('\nAll regressors exported to ./params/hyperfits/')
         if len(problematic_fits) > 0:
             print("WARNING - Some data could not be fit appropriately.")
             print("Please inspect the data quality for the following files:")

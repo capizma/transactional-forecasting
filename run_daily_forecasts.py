@@ -1,4 +1,4 @@
-from exploration.utils import regressors, dataframe_utils
+from exploration.utils import regressors, dataframe_utils, json_utils
 from run_daily_testing import produce_ticks
 
 import pandas as pd
@@ -17,8 +17,6 @@ pd.options.mode.chained_assignment = None
 
 warnings.simplefilter(action='ignore')
 
-#os.listdir('./params/hyperparams/')
-
 def plotthing(df):
     fig,ax = plt.subplots()
     sns.lineplot(data=df,x='ds',y='y')
@@ -30,14 +28,17 @@ def plotthing(df):
     
     ticks = produce_ticks(df)
     plt.xticks(ticks[0],ticks[1])
-    #ax.xaxis.set_major_locator(plt.MaxNLocator(4))
     
     plt.savefig('./results/predict_images/'+fname.replace('.csv','.png'))
     
     return ax
 
-
-for fname in tqdm.tqdm(os.listdir('./params/hyperparams/')):
+for fname in tqdm.tqdm(os.listdir('./data/')):
+    
+    # If there aren't any parameters then abandon the iteration
+    if json_utils.read_params(fname, ['hyperfit']) == 0 or json_utils.read_params(fname, ['hyperparams']) == 0:
+        print(fname + " doesn't have a full parameter list. Skipping...")
+        continue
     
     exclude_holidays = False
     exclude_weekends = False
@@ -73,8 +74,8 @@ for fname in tqdm.tqdm(os.listdir('./params/hyperparams/')):
         n_days = (date_range[3].date() - date(temp.year,temp.month,temp.day)).days
     df = df.drop(['yearmonth'],axis=1)
     
-    regr = eval(pd.read_csv('./params/hyperfits/'+fname)['regressor'].values[0])
-    params = eval(pd.read_csv('./params/hyperparams/'+fname)['params'].values[0])
+    regr = json_utils.read_params(fname, ['hyperfit'])
+    params = json_utils.read_params(fname, ['hyperparams'])
     
     m = Prophet(**params)
     
@@ -134,8 +135,6 @@ for fname in tqdm.tqdm(os.listdir('./params/hyperparams/')):
     daily.to_csv('./results/daily_results/'+fname)
     
     plotthing(daily.iloc[-240:])
-
-    #plt.plot(daily.index.values,daily[['y','yhat']])
     
 print('\nAll results exported to ./results/daily_results and ./results/monthly_results_agg/')
     
