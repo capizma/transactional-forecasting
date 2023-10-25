@@ -8,7 +8,7 @@ payments-prophet aims to combine the effects of hyperparameter tuning with a sel
 
 Model process:
 
-  - Import a .csv file (ideally with two columns, 'reporting-date' in format YYYY-MM-DD and 'volume' - an integer value representing what needs to be predicted.
+  - Import a .csv file into the /data directory (ideally with two columns, 'reporting-date' in format YYYY-MM-DD and 'volume' - an integer value representing what needs to be predicted.
     Please note - the following steps may take some time if you are uploading multiple files!
 
   - Run produce_regressors.py. A list of the most suitable regressors for each datafile - identified from using a basic version of Prophet will be output to ./params/hyperfits/, along with their produced sMAPE scores.
