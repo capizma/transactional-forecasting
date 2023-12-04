@@ -1,5 +1,5 @@
 # payments-prophet
-Payments forecasting at scale.
+Payments forecasting at scale
 
 Hyperparameter tuning has always proven to be effective for increasing model accuracy - however this can be expanded upon.
 When trying to predict on time-series data, sometimes the dates in question are the most effective indicator of volume - especially in the topic of trends in transactional data.
